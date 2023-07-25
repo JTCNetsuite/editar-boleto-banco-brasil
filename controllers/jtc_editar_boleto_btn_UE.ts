@@ -9,7 +9,10 @@ import * as log from 'N/log';
 
 export const beforeLoad: EntryPoints.UserEvent.beforeLoad = (ctx: EntryPoints.UserEvent.beforeLoadContext) => {
     try {
-        msr.beforeLoad(ctx);
+        if (ctx.type ==  ctx.UserEventType.VIEW) {
+            log.debug("view", "ok");
+            msr.createButton(ctx.form, "editarBoleto("+ctx.newRecord.id+")");
+        }
 
     } catch (e) {
         log.debug('jtc_editar_boleto_btn_UE.beforeLoad', e);        
