@@ -17,6 +17,7 @@ export const editarBoleto = (idTransaction) => {
     }
 }
 
+
 export const pageInit: EntryPoints.Client.pageInit = (ctx: EntryPoints.Client.pageInitContext) => {
     
 }
