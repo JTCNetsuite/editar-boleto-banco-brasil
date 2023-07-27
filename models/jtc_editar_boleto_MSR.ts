@@ -145,15 +145,16 @@ const requestEditarBoleto = (url, body, authObj) => {
         });
 
         // console.log(requestBody);
-        const res = fetch('http://localhost:8000/editarboleto', {
+        var reponse_body;
+        return fetch('http://localhost:8000/editarboleto', {
             body: requestBody,
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             }
-        }).then(res => res.json()).then(result => console.log(result));
-
-        return res;
+        }).then(res => res.json()).then(result => {
+            return result;
+        });
 
 
     } catch(e) {
@@ -167,11 +168,13 @@ const requestEditarBoleto = (url, body, authObj) => {
 
 const abatimentoNoValorBoleto = (idTransaction) => {
     const body = payLoad();
-    body.indicadorAlterarAbatimento = "S";
+    body.indicadorIncluirAbatimento = "S";
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
     body.abatimento.valorAbatimento = valor_do_abatimento;
+
+    console.log("valor abatimento", body.abatimento.valorAbatimento);
 
 
     if (!valor_do_abatimento) {
@@ -202,11 +205,14 @@ const abatimentoNoValorBoleto = (idTransaction) => {
 
         const response = requestEditarBoleto(url, body, auth);
 
-        console.log(response);
+        response.then(res => {
+            customRecordCnabParcela.save({ ignoreMandatoryFields: true });
 
-        // customRecordCnabParcela.save({ ignoreMandatoryFields: true });
-
-        // window.location.reload()
+            window.location.reload();
+    
+        }).catch(error => {
+            console.log('error Interno', error);
+        });
 
     }
 
