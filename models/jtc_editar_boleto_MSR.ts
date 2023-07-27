@@ -7,9 +7,8 @@ import { contants as cts } from '../module/jtc_editar_boleto_CTS';
 import * as log from "N/log";
 import { Form } from "N/ui/serverWidget";
 import * as record from 'N/record';
-import * as runtime from  'N/runtime';
 import * as https from  'N/https';
-
+import * as http from 'N/http';
 
 
 export const createButton = (form: Form, fncName: string) => {
@@ -65,7 +64,8 @@ export const editarBoleto = (idTransaction) => {
 const getAccessToken = () =>{
     try {
         const url = "https://oauth.hm.bb.com.br/oauth/token";
-        const authorization = "Basic ZXlKcFpDSTZJalJtTlRWak56VXRNR015WVMwMFl5SXNJbU52WkdsbmIxQjFZbXhwWTJGa2IzSWlPakFzSW1OdlpHbG5iMU52Wm5SM1lYSmxJam8wTlRJMk1Td2ljMlZ4ZFdWdVkybGhiRWx1YzNSaGJHRmpZVzhpT2pGOTpleUpwWkNJNklqaGhOak13SWl3aVkyOWthV2R2VUhWaWJHbGpZV1J2Y2lJNk1Dd2lZMjlrYVdkdlUyOW1kSGRoY21VaU9qUTFNall4TENKelpYRjFaVzVqYVdGc1NXNXpkR0ZzWVdOaGJ5STZNU3dpYzJWeGRXVnVZMmxoYkVOeVpXUmxibU5wWVd3aU9qRXNJbUZ0WW1sbGJuUmxJam9pY0hKdlpIVmpZVzhpTENKcFlYUWlPakUyT0RNd05USXdNRE00TmpsOQ==";
+        const authorization = "Basic ZXlKcFpDSTZJalZsTWpnMFltUXRNeUlzSW1OdlpHbG5iMUIxWW14cFkyRmtiM0lpT2pBc0ltTnZaR2xuYjFOdlpuUjNZWEpsSWpvMU5qRTRNaXdpYzJWeGRXVnVZMmxoYkVsdWMzUmhiR0ZqWVc4aU9qRjk6ZXlKcFpDSTZJbUV4TnpNMU9EY3RZbVl5TlMwMFlXTWlMQ0pqYjJScFoyOVFkV0pzYVdOaFpHOXlJam93TENKamIyUnBaMjlUYjJaMGQyRnlaU0k2TlRZeE9ESXNJbk5sY1hWbGJtTnBZV3hKYm5OMFlXeGhZMkZ2SWpveExDSnpaWEYxWlc1amFXRnNRM0psWkdWdVkybGhiQ0k2TVN3aVlXMWlhV1Z1ZEdVaU9pSm9iMjF2Ykc5bllXTmhieUlzSW1saGRDSTZNVFkzTnpjMk1UUTFPVE13TVgw";
+
         
         
     
@@ -77,11 +77,10 @@ const getAccessToken = () =>{
         const headers = {};
         headers['Authorization'] = authorization;
         headers['Accept'] = 'application/json';
-
         const response = https.post({
             url: url,
             headers: headers,
-            body: ""
+            body: bodyObj
         });
 
         // console.log(response.body);
@@ -97,17 +96,16 @@ const getAccessToken = () =>{
 const payLoad = () => {
     return {
         "numeroConvenio": 3128557,
-        "indicadorNovaDataVencimento": "n",
-
+        "indicadorNovaDataVencimento": "N",
         "indicadorAtribuirDesconto": "N",
         "indicadorAlterarDesconto": "N",
         "indicadorAlterarDataDesconto": "N",
         "indicadorProtestar": "N",
         "indicadorSustacaoProtesto": "N",
         "indicadorCancelarProtesto": "N",
-        "indicadorIncluirAbatimento": "S",
+        "indicadorIncluirAbatimento": "N",
         "abatimento": {
-            "valorAbatimento": 111.99
+            "valorAbatimento": 0
         },
         "indicadorAlterarAbatimento": "N",
         "alteracaoAbatimento": {
@@ -137,12 +135,43 @@ const payLoad = () => {
 }
 
 
+const requestEditarBoleto = (url, body, authObj) => {
+    try {
+        
+        const requestBody = JSON.stringify({
+            body_req: body,
+            url: url, 
+            authObj: authObj
+        });
+
+        // console.log(requestBody);
+        const res = fetch('http://localhost:8000/editarboleto', {
+            body: requestBody,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(res => res.json()).then(result => console.log(result));
+
+        return res;
+
+
+    } catch(e) {
+        console.log(e);
+    }
+    
+
+}
+
+
+
 const abatimentoNoValorBoleto = (idTransaction) => {
     const body = payLoad();
-
-
-
+    body.indicadorAlterarAbatimento = "S";
+    
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
+    
+    body.abatimento.valorAbatimento = valor_do_abatimento;
 
 
     if (!valor_do_abatimento) {
@@ -150,7 +179,7 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         editarBoleto(idTransaction);
     } else {
         console.log(valor_do_abatimento);
-        const token = getAccessToken();
+        const token = JSON.parse(getAccessToken());
         console.log(token);
 
         const customRecordCnabParcela = record.load({
@@ -167,6 +196,13 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         const valor_atual = valorOriginal - valor_do_abatimento;
 
         customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
+
+        const url = "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285579999999997?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7";
+        const auth = token.token_type +" " +token.access_token;
+
+        const response = requestEditarBoleto(url, body, auth);
+
+        console.log(response);
 
         // customRecordCnabParcela.save({ ignoreMandatoryFields: true });
 
