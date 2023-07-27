@@ -8,7 +8,6 @@ import * as log from "N/log";
 import { Form } from "N/ui/serverWidget";
 import * as record from 'N/record';
 import * as https from  'N/https';
-import * as http from 'N/http';
 
 
 export const createButton = (form: Form, fncName: string) => {
