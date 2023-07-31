@@ -8,7 +8,7 @@ import * as log from "N/log";
 import { Form } from "N/ui/serverWidget";
 import * as record from 'N/record';
 import * as https from  'N/https';
-
+import * as http from 'N/http';
 
 export const createButton = (form: Form, fncName: string) => {
     try {
@@ -137,16 +137,16 @@ const payLoad = () => {
 const requestEditarBoleto = (url, body, authObj) => {
     try {
         
-        const requestBody = JSON.stringify({
-            body_req: body,
+        const requestBody = {
+            // body_req: body,
             url: url, 
             authObj: authObj
-        });
+        };
+
 
         // console.log(requestBody);
-        var reponse_body;
         return fetch('http://localhost:8000/editarboleto', {
-            body: requestBody,
+            body: JSON.stringify(requestBody),
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -167,11 +167,11 @@ const requestEditarBoleto = (url, body, authObj) => {
 
 const abatimentoNoValorBoleto = (idTransaction) => {
     const body = payLoad();
-    body.indicadorIncluirAbatimento = "S";
+    body.indicadorAlterarAbatimento = "S";
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
-    body.abatimento.valorAbatimento = valor_do_abatimento;
+    body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
 
     console.log("valor abatimento", body.abatimento.valorAbatimento);
 
@@ -199,12 +199,13 @@ const abatimentoNoValorBoleto = (idTransaction) => {
 
         customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
 
-        const url = "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285579999999997?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7";
+        const url = "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285579999999998?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7";
         const auth = token.token_type +" " +token.access_token;
 
         const response = requestEditarBoleto(url, body, auth);
 
         response.then(res => {
+            console.log(res)
             customRecordCnabParcela.save({ ignoreMandatoryFields: true });
 
             window.location.reload();
