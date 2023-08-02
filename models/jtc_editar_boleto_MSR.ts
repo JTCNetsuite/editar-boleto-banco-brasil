@@ -28,8 +28,6 @@ export const createButton = (form: Form, fncName: string) => {
     }
 }
 
-
-
 export const editarBoleto = (idTransaction) => {
     try {
         const op = window.prompt(
@@ -138,7 +136,7 @@ const requestEditarBoleto = (url, body, authObj) => {
     try {
         
         const requestBody = {
-            // body_req: body,
+            body_req: body,
             url: url, 
             authObj: authObj
         };
@@ -164,16 +162,19 @@ const requestEditarBoleto = (url, body, authObj) => {
 }
 
 
-
 const abatimentoNoValorBoleto = (idTransaction) => {
     const body = payLoad();
-    body.indicadorAlterarAbatimento = "S";
+    
+    const customRecordCnabParcela = record.load({
+        type: cts.CNAB_AUXLIAR_PARCELA.ID,
+        id: idTransaction
+    })
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
-    body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
+    const valor_abatimento_field = customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO);
 
-    console.log("valor abatimento", body.abatimento.valorAbatimento);
+
 
 
     if (!valor_do_abatimento) {
@@ -184,21 +185,36 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         const token = JSON.parse(getAccessToken());
         console.log(token);
 
-        const customRecordCnabParcela = record.load({
-            type: cts.CNAB_AUXLIAR_PARCELA.ID,
-            id: idTransaction
-        });
+        if (!!valor_abatimento_field) {
+            console.log("alterar o valor do abatimento!");
+            body.indicadorAlterarAbatimento = "S";
+            body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
+            
+            const valor_atual_field = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL));
+            
+            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual_field - valor_do_abatimento});
+            
 
+
+        } else {
+            console.log("Incluir o valor do abatimento!");
+            body.indicadorIncluirAbatimento = "S";
+            body.abatimento.valorAbatimento = valor_do_abatimento;
+
+            const valorOriginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
+
+            const valor_atual = valorOriginal - valor_do_abatimento;
+
+            customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
+
+        }
+        
 
         customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value: valor_do_abatimento });
 
-        const valorOriginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
+        
 
-
-        const valor_atual = valorOriginal - valor_do_abatimento;
-
-        customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
-
+        
         const url = "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285579999999998?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7";
         const auth = token.token_type +" " +token.access_token;
 
@@ -216,10 +232,8 @@ const abatimentoNoValorBoleto = (idTransaction) => {
 
     }
 
-
-
-
 }
+
 
 const alterarValorBoleto = (idTransaction) => {
 
