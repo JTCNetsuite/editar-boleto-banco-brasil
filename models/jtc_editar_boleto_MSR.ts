@@ -8,7 +8,6 @@ import * as log from "N/log";
 import { Form } from "N/ui/serverWidget";
 import * as record from 'N/record';
 import * as https from  'N/https';
-import * as http from 'N/http';
 
 export const createButton = (form: Form, fncName: string) => {
     try {
@@ -32,7 +31,7 @@ export const editarBoleto = (idTransaction) => {
     try {
         const op = window.prompt(
             "A - Lançar abatimento no valor do boleto \n" +
-            "B - alterar valor do boleto \n" +
+            "B - Alterar data de vecimento \n" +
             "C - alterar taxa de juros do boleto \n"
         );
         console.log(op);
@@ -42,10 +41,10 @@ export const editarBoleto = (idTransaction) => {
                 abatimentoNoValorBoleto(idTransaction);
                 break;
             case "B":
-                alterarValorBoleto(idTransaction);
+                alterarDataDoVencimento(idTransaction);
                 break;
             case "C":
-                alterarTaxaJurosBoleto();
+                alterarTaxaJurosBoleto(idTransaction);
                 break;
             default:
                 alert("Valor inválido, tente novamente!");
@@ -94,6 +93,9 @@ const payLoad = () => {
     return {
         "numeroConvenio": 3128557,
         "indicadorNovaDataVencimento": "N",
+        "alteracaoData": {
+            "novaDataVencimento": ""
+        },
         "indicadorAtribuirDesconto": "N",
         "indicadorAlterarDesconto": "N",
         "indicadorAlterarDataDesconto": "N",
@@ -111,7 +113,7 @@ const payLoad = () => {
         "indicadorCobrarJuros": "N",
         "juros": {
             "tipoJuros": 0,
-            "valorJuros": 0,
+            // "valorJuros": 0,
             "taxaJuros": 0
         },
         "indicadorDispensarJuros": "N",
@@ -161,8 +163,12 @@ const requestEditarBoleto = (url, body, authObj) => {
 
 }
 
+const urlEdit = () => "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285571000000010?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7&numeroConvenio=3128557";
+
+
 
 const abatimentoNoValorBoleto = (idTransaction) => {
+    
     const body = payLoad();
     
     const customRecordCnabParcela = record.load({
@@ -172,7 +178,7 @@ const abatimentoNoValorBoleto = (idTransaction) => {
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
-    const valor_abatimento_field = customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO);
+    const valor_abatimento_field = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO));
 
 
 
@@ -190,9 +196,13 @@ const abatimentoNoValorBoleto = (idTransaction) => {
             body.indicadorAlterarAbatimento = "S";
             body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
             
-            const valor_atual_field = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL));
+            const novoValotBatatimento = valor_abatimento_field - valor_do_abatimento;
+
+            const valorOrginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
+
+            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
             
-            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual_field - valor_do_abatimento});
+            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valorOrginal - novoValotBatatimento});
             
 
 
@@ -201,21 +211,19 @@ const abatimentoNoValorBoleto = (idTransaction) => {
             body.indicadorIncluirAbatimento = "S";
             body.abatimento.valorAbatimento = valor_do_abatimento;
 
+            const novoValotBatatimento = valor_abatimento_field + valor_do_abatimento;
+            console.log(novoValotBatatimento);
             const valorOriginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
 
-            const valor_atual = valorOriginal - valor_do_abatimento;
+            const valor_atual = valorOriginal - novoValotBatatimento;
 
+            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
             customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
 
         }
         
-
-        customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value: valor_do_abatimento });
-
+        const url = urlEdit();
         
-
-        
-        const url = "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285579999999998?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7";
         const auth = token.token_type +" " +token.access_token;
 
         const response = requestEditarBoleto(url, body, auth);
@@ -231,39 +239,121 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         });
 
     }
+}
+
+
+const alterarDataDoVencimento = (idTransaction) => {
+    const body = payLoad();
+
+    const dtVencimento = window.prompt("Digite a data: DD/MM/YYYY");
+
+    const customRecordCnabParcela = record.load({
+        type: cts.CNAB_AUXLIAR_PARCELA.ID,
+        id: idTransaction
+    }); 
+
+    if (!!dtVencimento) {
+        if (verificaoData(dtVencimento)) {
+            const dataFormat = dtVencimento.split('/').join('.');
+            const token = JSON.parse(getAccessToken());
+
+            const url = urlEdit();
+            
+            body.indicadorNovaDataVencimento = "S";
+            body.alteracaoData.novaDataVencimento = dataFormat;
+
+            const auth = token.token_type +" " +token.access_token;
+
+            const response = requestEditarBoleto(url, body, auth);
+
+            response.then(res => {
+                console.log(res);
+                customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.DATA_VENCIMENTO, value: dataFormat});
+
+                customRecordCnabParcela.save({ignoreMandatoryFields: true});
+
+                window.location.reload();
+            }).catch(error => {
+                console.log('error', error);
+            });
+        } else {
+            alert("Formatção da data inválida!");
+            editarBoleto(idTransaction);
+        }
+    } else {
+        alert('Data inválida!');
+        editarBoleto(idTransaction);
+    }
+    
+
+
+}
+
+const verificaoData = (data: string) => {
+    const x = data.split("/");
+    if (x.length != 3) {
+        return false;
+    } 
+
+    if (x[0].length != 2 || x[1].length != 2) {
+        return false;
+    }
+
+    if (x[2].length != 4) {
+        return false;
+    }
+
+    return true;
 
 }
 
 
-const alterarValorBoleto = (idTransaction) => {
+const alterarTaxaJurosBoleto = (idTransaction) => {
+    const body = payLoad();
 
-    alert("alterarValor");
+    const valor_juros = parseFloat(window.prompt("Digite um valor para o juros (%): "));
+    const customRecordCnabParcela = record.load({
+        type: cts.CNAB_AUXLIAR_PARCELA.ID,
+        id: idTransaction
+    });
 
-    const body = payLoad()
-    const valorAlteracao = Number(window.prompt("Digite o valor de alteração: "));
 
-    if (!valorAlteracao) {
 
-        alert("Digite um valor");
+    if (!valor_juros) {
+        alert("Digite um valor!");
         editarBoleto(idTransaction);
-
     } else {
+        console.log("valor do juros: ", valor_juros);
+        const token = JSON.parse(getAccessToken());
+        const url = urlEdit();
 
-        console.log('Alterdo para R$ ', valorAlteracao, ' -->  id boleto: ', idTransaction  )
-        const customRecordCnabParcela = record.load({
-            type: cts.CNAB_AUXLIAR_PARCELA.ID,
-            id: idTransaction
-        });
-        customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valorAlteracao})
+        const tipo_juros = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.JUROS_TIPO));
 
-        customRecordCnabParcela.save({ ignoreMandatoryFields: true });
+        body.indicadorCobrarJuros = "S";
+        body.juros.tipoJuros = tipo_juros;
+        body.juros.taxaJuros = valor_juros;
 
-        window.location.reload()
+        
+
+        const auth = token.token_type +" " +token.access_token;
+        
+    
+        const response = requestEditarBoleto(url, body, auth);
+
+        response.then(res => {
+            console.log(res);
+
+            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.JUROS_PORCENTAGEM, value: valor_juros});
+
+            customRecordCnabParcela.save({ignoreMandatoryFields: true});
+
+            window.location.reload();
+
+        }).catch(error => {
+            console.log('jtc_editar_boleto_MSR.alterarTaxaJurosBoleto', error);
+
+        })
 
     }
 
-}
-
-const alterarTaxaJurosBoleto = () => {
-    alert("alterarTaxa");
 }

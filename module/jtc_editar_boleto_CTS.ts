@@ -17,6 +17,9 @@ export const contants = {
         VALOR_ATUAL: 'custrecord_dk_cnab_val_atual',
         VALOR_ABATIMENTO: 'custrecord_dk_cnab_val_abt',
         VALOR_ORGINAL: 	'custrecord_dk_cnab_val_orig',
+        JUROS_TIPO: 'custrecord_dk_cnab_jurosmora_tipo',
+        JUROS_PORCENTAGEM: 'custrecord_dk_cnab_jurosmora_porcentagem',
+        DATA_VENCIMENTO: 'custrecord_dk_cnab_dt_vencimento'
     },
 
     SCRIPT_PARAMS: {
