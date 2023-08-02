@@ -163,7 +163,7 @@ const requestEditarBoleto = (url, body, authObj) => {
 
 }
 
-const urlEdit = () => "https://api.hm.bb.com.br/cobrancas/v2/boletos/00031285571000000010?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7&numeroConvenio=3128557";
+const urlEdit = (numConveio, nossoNumero) => `https://api.hm.bb.com.br/cobrancas/v2/boletos/${nossoNumero}?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7&numeroConvenio=${numConveio}`
 
 
 
@@ -175,6 +175,8 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         type: cts.CNAB_AUXLIAR_PARCELA.ID,
         id: idTransaction
     })
+    const nossoNumero = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO);
+    const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
@@ -222,7 +224,7 @@ const abatimentoNoValorBoleto = (idTransaction) => {
 
         }
         
-        const url = urlEdit();
+        const url = urlEdit(numConveio, nossoNumero);
         
         const auth = token.token_type +" " +token.access_token;
 
@@ -250,14 +252,17 @@ const alterarDataDoVencimento = (idTransaction) => {
     const customRecordCnabParcela = record.load({
         type: cts.CNAB_AUXLIAR_PARCELA.ID,
         id: idTransaction
-    }); 
+    });
+
+    const nossoNumero = String(customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO));
+    const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
 
     if (!!dtVencimento) {
         if (verificaoData(dtVencimento)) {
             const dataFormat = dtVencimento.split('/').join('.');
             const token = JSON.parse(getAccessToken());
 
-            const url = urlEdit();
+            const url = urlEdit(numConveio, nossoNumero);
             
             body.indicadorNovaDataVencimento = "S";
             body.alteracaoData.novaDataVencimento = dataFormat;
@@ -317,6 +322,9 @@ const alterarTaxaJurosBoleto = (idTransaction) => {
         id: idTransaction
     });
 
+    const nossoNumero = String(customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO));
+    const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
+
 
 
     if (!valor_juros) {
@@ -325,7 +333,7 @@ const alterarTaxaJurosBoleto = (idTransaction) => {
     } else {
         console.log("valor do juros: ", valor_juros);
         const token = JSON.parse(getAccessToken());
-        const url = urlEdit();
+        const url = urlEdit(numConveio, nossoNumero);
 
         const tipo_juros = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.JUROS_TIPO));
 
