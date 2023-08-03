@@ -12,7 +12,6 @@ import * as https from  'N/https';
 export const createButton = (form: Form, fncName: string) => {
     try {
         
-
         form.clientScriptModulePath = '../controllers/jtc_func_editar_boleto_CS.js'
 
         const btn = form.addButton({
@@ -59,8 +58,11 @@ export const editarBoleto = (idTransaction) => {
 
 const getAccessToken = () =>{
     try {
-        const url = "https://oauth.hm.bb.com.br/oauth/token";
-        const authorization = "Basic ZXlKcFpDSTZJalZsTWpnMFltUXRNeUlzSW1OdlpHbG5iMUIxWW14cFkyRmtiM0lpT2pBc0ltTnZaR2xuYjFOdlpuUjNZWEpsSWpvMU5qRTRNaXdpYzJWeGRXVnVZMmxoYkVsdWMzUmhiR0ZqWVc4aU9qRjk6ZXlKcFpDSTZJbUV4TnpNMU9EY3RZbVl5TlMwMFlXTWlMQ0pqYjJScFoyOVFkV0pzYVdOaFpHOXlJam93TENKamIyUnBaMjlUYjJaMGQyRnlaU0k2TlRZeE9ESXNJbk5sY1hWbGJtTnBZV3hKYm5OMFlXeGhZMkZ2SWpveExDSnpaWEYxWlc1amFXRnNRM0psWkdWdVkybGhiQ0k2TVN3aVlXMWlhV1Z1ZEdVaU9pSm9iMjF2Ykc5bllXTmhieUlzSW1saGRDSTZNVFkzTnpjMk1UUTFPVE13TVgw";
+        const url = "https://oauth.bb.com.br/oauth/token";
+        // const url = 'https://oauth.hm.bb.com.br/oauth/token';
+
+        const authorization = "Basic ZXlKcFpDSTZJalJtTlRWak56VXRNR015WVMwMFl5SXNJbU52WkdsbmIxQjFZbXhwWTJGa2IzSWlPakFzSW1OdlpHbG5iMU52Wm5SM1lYSmxJam8wTlRJMk1Td2ljMlZ4ZFdWdVkybGhiRWx1YzNSaGJHRmpZVzhpT2pGOTpleUpwWkNJNklqaGhOak13SWl3aVkyOWthV2R2VUhWaWJHbGpZV1J2Y2lJNk1Dd2lZMjlrYVdkdlUyOW1kSGRoY21VaU9qUTFNall4TENKelpYRjFaVzVqYVdGc1NXNXpkR0ZzWVdOaGJ5STZNU3dpYzJWeGRXVnVZMmxoYkVOeVpXUmxibU5wWVd3aU9qRXNJbUZ0WW1sbGJuUmxJam9pY0hKdlpIVmpZVzhpTENKcFlYUWlPakUyT0RNd05USXdNRE00TmpsOQ==";
+        // const authorization = "Basic ZXlKcFpDSTZJalZsTWpnMFltUXRNeUlzSW1OdlpHbG5iMUIxWW14cFkyRmtiM0lpT2pBc0ltTnZaR2xuYjFOdlpuUjNZWEpsSWpvMU5qRTRNaXdpYzJWeGRXVnVZMmxoYkVsdWMzUmhiR0ZqWVc4aU9qRjk6ZXlKcFpDSTZJbUV4TnpNMU9EY3RZbVl5TlMwMFlXTWlMQ0pqYjJScFoyOVFkV0pzYVdOaFpHOXlJam93TENKamIyUnBaMjlUYjJaMGQyRnlaU0k2TlRZeE9ESXNJbk5sY1hWbGJtTnBZV3hKYm5OMFlXeGhZMkZ2SWpveExDSnpaWEYxWlc1amFXRnNRM0psWkdWdVkybGhiQ0k2TVN3aVlXMWlhV1Z1ZEdVaU9pSm9iMjF2Ykc5bllXTmhieUlzSW1saGRDSTZNVFkzTnpjMk1UUTFPVE13TVgw";
 
         
         
@@ -89,9 +91,9 @@ const getAccessToken = () =>{
 }
 
 
-const payLoad = () => {
+const payLoad = (numConveio) => {
     return {
-        "numeroConvenio": 3128557,
+        "numeroConvenio": numConveio,
         "indicadorNovaDataVencimento": "N",
         "alteracaoData": {
             "novaDataVencimento": ""
@@ -163,13 +165,12 @@ const requestEditarBoleto = (url, body, authObj) => {
 
 }
 
-const urlEdit = (numConveio, nossoNumero) => `https://api.hm.bb.com.br/cobrancas/v2/boletos/${nossoNumero}?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7&numeroConvenio=${numConveio}`
-
+const urlEdit = (numConveio, nossoNumero) => `https://api.bb.com.br/cobrancas/v2/boletos/${nossoNumero}?gw-dev-app-key=4a5e515a85aa0cb8a74b71646d5ec025&numeroConvenio=${numConveio}`
+// const urlEdit = (numConveio, nossoNumero) => `https://api.hm.bb.com.br/cobrancas/v2/boletos/${nossoNumero}?gw-dev-app-key=139a9a5f64963519731b26966b98b0d7&numeroConvenio=${numConveio}`
 
 
 const abatimentoNoValorBoleto = (idTransaction) => {
     
-    const body = payLoad();
     
     const customRecordCnabParcela = record.load({
         type: cts.CNAB_AUXLIAR_PARCELA.ID,
@@ -177,6 +178,7 @@ const abatimentoNoValorBoleto = (idTransaction) => {
     })
     const nossoNumero = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO);
     const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
+    const body = payLoad(numConveio);
     
     const valor_do_abatimento = Number(window.prompt("Digite o valor do abatimento: "));
     
@@ -193,36 +195,38 @@ const abatimentoNoValorBoleto = (idTransaction) => {
         const token = JSON.parse(getAccessToken());
         console.log(token);
 
-        if (!!valor_abatimento_field) {
-            console.log("alterar o valor do abatimento!");
-            body.indicadorAlterarAbatimento = "S";
-            body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
+        // TODO SE PEDIREM PARA ALTERAR O VALOR DO ABATIMENTO ---
+
+        // if (!!valor_abatimento_field) {
+        //     console.log("alterar o valor do abatimento!");
+        //     body.indicadorAlterarAbatimento = "S";
+        //     body.alteracaoAbatimento.novoValorAbatimento = valor_do_abatimento;
             
-            const novoValotBatatimento = valor_abatimento_field - valor_do_abatimento;
+        //     const novoValotBatatimento = valor_abatimento_field - valor_do_abatimento;
 
-            const valorOrginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
+        //     const valorOrginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
 
-            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
+        //     customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
             
-            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valorOrginal - novoValotBatatimento});
+        //     customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valorOrginal - novoValotBatatimento});
             
 
 
-        } else {
-            console.log("Incluir o valor do abatimento!");
-            body.indicadorIncluirAbatimento = "S";
-            body.abatimento.valorAbatimento = valor_do_abatimento;
+        // } else {
+        console.log("Incluir o valor do abatimento!");
+        body.indicadorIncluirAbatimento = "S";
+        body.abatimento.valorAbatimento = valor_do_abatimento;
 
-            const novoValotBatatimento = valor_abatimento_field + valor_do_abatimento;
-            console.log(novoValotBatatimento);
-            const valorOriginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
+        const novoValotBatatimento = valor_abatimento_field + valor_do_abatimento;
+        console.log(novoValotBatatimento);
+        const valorOriginal = Number(customRecordCnabParcela.getValue(cts.CNAB_AUXLIAR_PARCELA.VALOR_ORGINAL));
 
-            const valor_atual = valorOriginal - novoValotBatatimento;
+        const valor_atual = valorOriginal - novoValotBatatimento;
 
-            customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
-            customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
+        customRecordCnabParcela.setValue({fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ABATIMENTO, value:  novoValotBatatimento});
+        customRecordCnabParcela.setValue({ fieldId: cts.CNAB_AUXLIAR_PARCELA.VALOR_ATUAL, value: valor_atual });
 
-        }
+        // }
         
         const url = urlEdit(numConveio, nossoNumero);
         
@@ -245,18 +249,18 @@ const abatimentoNoValorBoleto = (idTransaction) => {
 
 
 const alterarDataDoVencimento = (idTransaction) => {
-    const body = payLoad();
-
+    
     const dtVencimento = window.prompt("Digite a data: DD/MM/YYYY");
-
+    
     const customRecordCnabParcela = record.load({
         type: cts.CNAB_AUXLIAR_PARCELA.ID,
         id: idTransaction
     });
-
+    
     const nossoNumero = String(customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO));
     const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
-
+    const body = payLoad(numConveio);
+    
     if (!!dtVencimento) {
         if (verificaoData(dtVencimento)) {
             const dataFormat = dtVencimento.split('/').join('.');
@@ -314,17 +318,17 @@ const verificaoData = (data: string) => {
 
 
 const alterarTaxaJurosBoleto = (idTransaction) => {
-    const body = payLoad();
-
+    
     const valor_juros = parseFloat(window.prompt("Digite um valor para o juros (%): "));
     const customRecordCnabParcela = record.load({
         type: cts.CNAB_AUXLIAR_PARCELA.ID,
         id: idTransaction
     });
-
+    
     const nossoNumero = String(customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NOSSO_NUMERO));
     const numConveio = customRecordCnabParcela.getText(cts.CNAB_AUXLIAR_PARCELA.NUM_CONVENIO);
-
+    
+    const body = payLoad(numConveio);
 
 
     if (!valor_juros) {
