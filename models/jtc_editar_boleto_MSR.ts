@@ -8,6 +8,7 @@ import * as log from "N/log";
 import { Form } from "N/ui/serverWidget";
 import * as record from 'N/record';
 import * as https from  'N/https';
+import * as search from 'N/search';
 
 export const createButton = (form: Form, fncName: string) => {
     try {
@@ -368,4 +369,43 @@ const alterarTaxaJurosBoleto = (idTransaction) => {
 
     }
 
+}
+
+
+export const preencherPdfDoBoleto = (nossoNumero) => {
+    try {
+        var folderSearchObj = search.create({
+            type: "folder",
+            filters:
+            [
+               ["file.name","haskeywords",nossoNumero]
+            ],
+            columns:
+            [
+               search.createColumn({
+                  name: "name",
+                  join: "file",
+                  label: "Nome"
+               }),
+               search.createColumn({
+                  name: "url",
+                  join: "file",
+                  label: "URL"
+               }),
+               search.createColumn({
+                  name: "internalid",
+                  join: "file",
+                  label: "ID interno"
+               })
+            ]
+         }).run().getRange({start: 0, end: 1})
+        //  log.debug("folder", folderSearchObj)
+        //  if (folderSearchObj.length >  1){
+        log.debug("foler", folderSearchObj[0].getValue({name: 'url', join: 'file'}))
+        return folderSearchObj[0].getValue({name: 'url', join: 'file'})
+        //  }
+
+    } catch (error) {
+        log.error("jtc_editar_Boleto_MSR.preencherPdfDoBoleto", error)
+    }
 }
